@@ -5,191 +5,227 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <sstream>
+#include "pebble.h"
 
 using namespace std;
-
-struct node{
-    int visited;
-    int NB0index;
-    int NB1index;
-    int nrNBs;
-    vector<int> neighbours;
-    double nodex;
-    double nodey;
-};
-
-
-
-
-
-
-
-int recursive_free_pebble(vector<node> &nodelist,int nodenr,int source){
-    
-    nodelist[nodenr].visited=1;
-    
-    
-    if(nodelist[nodenr].NB0index==-1){  //if -1 there is a free pebble
-        nodelist[nodenr].NB0index=source;
-        return 1;
-    }
-    if(nodelist[nodenr].NB1index==-1){
-        nodelist[nodenr].NB1index=source;
-        return 1;
-    }
-    
-    if((nodelist[nodelist[nodenr].NB0index].visited==0)   && recursive_free_pebble(nodelist,nodelist[nodenr].NB0index,nodenr)){
-        nodelist[nodenr].NB0index=source;
-        return 1;
-    }
-    
-    if((nodelist[nodelist[nodenr].NB1index].visited==0)   && recursive_free_pebble(nodelist,nodelist[nodenr].NB1index,nodenr)){
-        nodelist[nodenr].NB1index=source;
-        return 1;
-    }
-    
-    return 0;
-    
-}
-
-
-
-int free_pebble(vector<node> &nodelist,int nodenr,int source,int exclude){
-    for(int i=0;i<nodelist.size();i++){
-        nodelist[i].visited=0;        
-    }
-    nodelist[exclude].visited=1;
-    nodelist[source].visited=1;
-    recursive_free_pebble(nodelist,nodenr,source);
-}
-
-
-
-int draw_bond(vector<node> &nodelist, int nodenr1, int nodenr2){ // dont understand this!
-    
-    
-    int res1;
-    int result=1;
-    
-    
-    if(nodelist[nodenr1].NB0index!=-1){
-        res1=free_pebble(nodelist,nodelist[nodenr1].NB0index,nodenr1,nodenr2);
-        if (res1) {
-            nodelist[nodenr1].NB0index=-1;
-        }
-        result*=res1;
-    }
-    if(nodelist[nodenr1].NB1index!=-1 && result==1){
-        res1=free_pebble(nodelist,nodelist[nodenr1].NB1index,nodenr1,nodenr2);
-        if(res1){
-         nodelist[nodenr1].NB1index=-1;
-        }
-        result*=res1;
-        
-    }
-    if(nodelist[nodenr2].NB0index!=-1 && result==1){
-        res1=free_pebble(nodelist,nodelist[nodenr2].NB0index,nodenr2,nodenr1);
-        if(res1){
-            nodelist[nodenr2].NB0index=-1;
-        }
-        result*=res1;
-    }
-    if(nodelist[nodenr2].NB1index!=-1 && result==1){
-        res1=free_pebble(nodelist,nodelist[nodenr2].NB1index,nodenr2,nodenr1);
-        if(res1){
-            nodelist[nodenr2].NB1index=-1;
-        }
-        result*=res1;
-    }
-    
-    
-    
-    
-    if(result==1){
-        nodelist[nodenr1].nrNBs++;
-        nodelist[nodenr2].nrNBs++;
-        nodelist[nodenr1].neighbours.push_back(nodenr2);
-        nodelist[nodenr2].neighbours.push_back(nodenr1);
-        nodelist[nodenr1].NB0index=nodenr2;
-       
-        return 1; //succes
-    }
-    
-    return 0;
-}
-
-
-
-
-
-
 
 
 
 
 int main(int argc, char **argv) {
 
-    vector<node> nodelist(0);
-    node node0,node1,node2,node3;
+    vector<node> nodelist1(0);
+    vector<vector<int> > springlist;
 
-    node1.visited=0;
-    node1.NB0index=-1;
-    node1.NB1index=-1;
-    node1.nrNBs=0;
-
-    node1.nodex=0.0;
-    node1.nodey=0.0;
-    nodelist.push_back(node1);
-    node1.nodex=1.0;
-    node1.nodey=0.0;
-    nodelist.push_back(node1);
-    node1.nodex=0.5;
-    node1.nodey=0.5;
-    nodelist.push_back(node1);
-    node1.nodex=0.0;
-    node1.nodey=1.0;
-    nodelist.push_back(node1);    
-    node1.nodex=1.0;
-    node1.nodey=1.0;
-    nodelist.push_back(node1);
-
+    node node0, node1;
+    vector<double> X,Y;
+  
+    int mikado=1; 
     
-    cout<<draw_bond(nodelist,0,1)<<endl;
-    cout<<draw_bond(nodelist,0,2)<<endl;
-    cout<<draw_bond(nodelist,0,3)<<endl;
-    cout<<draw_bond(nodelist,1,2)<<endl;
-    cout<<draw_bond(nodelist,1,4)<<endl;
-    cout<<draw_bond(nodelist,2,3)<<endl;
-    cout<<draw_bond(nodelist,3,4)<<endl;
-
-    
-    cout<<"After the bonds"<<endl;
-    for(int i=0;i<nodelist.size();i++){
-        cout<<i<<"\t"<<nodelist[i].NB0index<<"\t"<<nodelist[i].NB1index<<endl;
-    }
-
-    ofstream nodes("nodes.txt");
-    for(int i=0; i<nodelist.size();i++){
-        int freepebs=0;
-        if(nodelist[i].NB0index==-1){
-        
-            freepebs++;
+    // load a mikadofile from .txt file
+    if(mikado==1){
+        //this section load an existing network from a txt file
+        ifstream springf("springs2.txt",std::ifstream::in);
+        //vector<vector<int> > springl;
+        vector<int> sspring(2);
+        string line;
+        int springnode[2];
+        while (getline(springf,line) ){
+            stringstream ss(line);
+            ss >>springnode[0] >> springnode[1];
+            sspring[0]=springnode[0];
+            sspring[1]=springnode[1];
+            springlist.push_back(sspring);
         }
-        if(nodelist[i].NB1index==-1){
-            freepebs++;
+        //uncomment for extra springs (SSS)
+//         sspring[0]=77;
+//         sspring[1]=78;
+//         springlist.push_back(sspring);
+//         sspring[0]=18;
+//         sspring[1]=19;
+//         springlist.push_back(sspring);
+//         sspring[0]=78;
+//         sspring[1]=19;
+//         springlist.push_back(sspring);
+//         sspring[0]=18;
+//         sspring[1]=77;
+//         springlist.push_back(sspring);
+//         
+//         sspring[0]=289;
+//         sspring[1]=77;
+//         springlist.push_back(sspring);
+//         sspring[0]=289;
+//         sspring[1]=78;
+//         springlist.push_back(sspring);
+//         sspring[0]=289;
+//         sspring[1]=18;
+//         springlist.push_back(sspring);
+//         sspring[0]=19;
+//         sspring[1]=289;
+//         springlist.push_back(sspring);
+// 
+//         sspring[0]=0;
+//         sspring[1]=71;
+//         springlist.push_back(sspring);
+//         sspring[0]=4;
+//         sspring[1]=71;
+//         springlist.push_back(sspring);
+//         sspring[0]=32;
+//         sspring[1]=71;
+//         springlist.push_back(sspring);
+//         sspring[0]=77;
+//         sspring[1]=71;
+//         springlist.push_back(sspring);
+//         
+//         sspring[0]=0;
+//         sspring[1]=4;
+//         springlist.push_back(sspring);
+//         sspring[0]=0;
+//         sspring[1]=32;
+//         springlist.push_back(sspring);
+//         sspring[0]=32;
+//         sspring[1]=77;
+//         springlist.push_back(sspring);
+//         sspring[0]=77;
+//         sspring[1]=4;
+//         springlist.push_back(sspring);
+        
+        ifstream coords("nodes.txt",std::ifstream::in);
+        vector<double> coordxy(2);
+        vector<vector<double > > XY;
+        double pos1[3];
+        while(getline(coords,line)){
+            stringstream ss(line);
+            ss >> pos1[0] >> pos1[1] >> pos1[2];
+            coordxy[0]=pos1[1];
+            coordxy[1]=pos1[2];
+            X.push_back(pos1[1]);
+            Y.push_back(pos1[2]);
+            XY.push_back(coordxy);
         }
-        nodes<<nodelist[i].nodex<<"\t"<<nodelist[i].nodey<<"\t"<<freepebs<<endl;;
     }
+
     
 
-    //monday make a list for springs that have pebbles and draw those pebbles
-    for(int i=0;i<nodelist.size();i++){
+    if(mikado!=1){ // regular nodes and springs. Not sure this will work w. the new class. Check monday
+        node1.visited=0;
+        node1.NB0index=-1;
+        node1.NB1index=-1;
+        node1.nrNBs=0;
+
+        node1.nodex=0.0;
+        node1.nodey=0.0;
+        nodelist1.push_back(node1);
+        node1.nodex=1.0;
+        node1.nodey=0.0;
+        nodelist1.push_back(node1);
+        node1.nodex=0.5;
+        node1.nodey=0.5;
+        nodelist1.push_back(node1);
+        node1.nodex=0.0;
+        node1.nodey=1.0;
+        nodelist1.push_back(node1);    
+        node1.nodex=1.0;
+        node1.nodey=1.0;
+        nodelist1.push_back(node1);
+
+        vector<int> spring;
+        spring.push_back(0);
+        spring.push_back(1);
+        springlist.push_back(spring);
         
+        spring[0]=0;
+        spring[1]=2;
+        springlist.push_back(spring);
         
+        spring[0]=0;
+        spring[1]=3;
+        springlist.push_back(spring);
+        
+        spring[0]=1;
+        spring[1]=2; 
+        springlist.push_back(spring);
+        
+        spring[0]=1;
+        spring[1]=4;
+        springlist.push_back(spring);
+        
+        spring[0]=2;
+        spring[1]=3;
+        springlist.push_back(spring);
+        
+        spring[0]=2;
+        spring[1]=4;
+        springlist.push_back(spring);
+        
+        spring[0]=3;
+        spring[1]=4;
+        springlist.push_back(spring);
+    }
+     vector<int> nopebblesprings; //This vector stores the index of springs that don't get a pebble
+    
+    //make an instance of a pebble
+     pebble pebbletest(X.size(),X,Y);
+
+     //This loop plays the pebblegame. It changes the coord list inside pebbletest 
+     //if springs != pebbled -> it is stored in nopebblesprings.
+     for(int i=0;i<springlist.size();i++){
+         if(!pebbletest.draw_bond(springlist[i][0],springlist[i][1]))
+             nopebblesprings.push_back(i);
+     }
+     
+    //Some post processing. Counting free pebbles etc etc
+     int freepebbles=0;
+     for(int i=0;i<pebbletest.nodelist.size();i++){
+        if(pebbletest.nodelist[i].NB0index==-1){
+           freepebbles++;
+        }
+        if(pebbletest.nodelist[i].NB1index==-1){
+            freepebbles++;
+        }
+    }
+ 
+     cout<<"The number of free pebbles = "<<freepebbles<<endl;
+     cout<<"Number of nodes="<<pebbletest.nodelist.size()<<endl;
+     cout<<"Number of springs="<<springlist.size()<<endl;
+     cout<<"2*# nodes - #springs="<<2*pebbletest.nodelist.size()-springlist.size()<<endl;
+     
+     
+     //And for now an ofstream of nodes w. # pebbles and springs w. nr pebbles 
+     ofstream nodes("nodes1.txt");
+     for(int i=0; i<pebbletest.nodelist.size();i++){
+         int freepebs=0;
+         if(pebbletest.nodelist[i].NB0index==-1){
+         
+             freepebs++;
+         }
+         if(pebbletest.nodelist[i].NB1index==-1){
+             freepebs++;
+         }
+         nodes<<pebbletest.nodelist[i].nodex<<"\t"<<pebbletest.nodelist[i].nodey<<"\t"<<freepebs<<endl;;
+     }
+     
+    ofstream springs("springs1.txt");
+    int nodes1, nodes2;
+    for(int i=0;i<pebbletest.nodelist.size();i++){
+        nodes1=i;
+        if(pebbletest.nodelist[i].NB0index!=-1){
+            nodes2=pebbletest.nodelist[i].NB0index;
+            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
+        }
+        if(pebbletest.nodelist[i].NB1index!=-1){
+            nodes2=pebbletest.nodelist[i].NB1index;
+            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
+        }
     }
     
-    
+    ofstream springs0peb("springs0peb1.txt");
+    for(int i=0;i<nopebblesprings.size();i++){
+        nodes1=springlist[nopebblesprings[i]][0];
+        nodes2=springlist[nopebblesprings[i]][1];
+        springs0peb<<nodes1<<"\t"<<nodes2<<endl;
+    }
     
     return 0;
 }
