@@ -3,6 +3,8 @@
 
 
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 struct node{
     int visited;
@@ -39,11 +41,14 @@ private:
 
     int recursive_free_pebble(int nodenr,int source);
     int free_pebble(int nodenr,int source,int exclude);
-    
-public:
     std::vector<node> nodelist;
+
+public:
     int draw_bond(int nodenr1, int nodenr2);
-    
+    int freepebs();
+    int nrnodes();
+    void nodefile();
+    void springfile();
     pebble(int); //constructor
     pebble(int, std::vector<double> &xpos,std::vector<double> &ypos);
     ~pebble(){}; //destructor

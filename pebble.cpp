@@ -92,6 +92,56 @@ int pebble::draw_bond(int nodenr1, int nodenr2){
     return 0;
 }
 
+int pebble::freepebs(){ //this method calculates the free pebbles on the nodes
+    int nrpebs=0;
+    for(int i=0;i<nodelist.size();i++){
+        if(nodelist[i].NB0index==-1){
+            nrpebs++;
+        }
+        if(nodelist[i].NB1index==-1){
+            nrpebs++;
+        }
+    }
+}
+
+void pebble::nodefile(){
+    ofstream nodes("nodes1.txt");
+     for(int i=0; i<nodelist.size();i++){
+         int freepebs=0;
+         if(nodelist[i].NB0index==-1){
+            freepebs++;
+         }
+         if(nodelist[i].NB1index==-1){
+             freepebs++;
+         }
+         nodes<<nodelist[i].nodex<<"\t"<<nodelist[i].nodey<<"\t"<<freepebs<<endl;
+     }
+
+    
+}
+
+
+void pebble::springfile(){
+    ofstream springs("springs1.txt");
+    int nodes1, nodes2;
+    for(int i=0;i<nodelist.size();i++){
+        nodes1=i;
+        if(nodelist[i].NB0index!=-1){
+            nodes2=nodelist[i].NB0index;
+            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
+        }
+        if(nodelist[i].NB1index!=-1){
+            nodes2=nodelist[i].NB1index;
+            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
+        }
+    }
+}
+
+int pebble::nrnodes(){
+    return nodelist.size();
+}
+
+
 pebble::pebble(int nrnodes,vector<double> &xpos,vector<double> &ypos)
   : nodelist(nrnodes)
 {
@@ -100,7 +150,6 @@ pebble::pebble(int nrnodes,vector<double> &xpos,vector<double> &ypos)
         nodelist[i].nodey=ypos[i];
     }
 }
-
 
 
 pebble::pebble(int nrnodes)

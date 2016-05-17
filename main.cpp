@@ -109,26 +109,22 @@ int main(int argc, char **argv) {
     
 
     if(mikado!=1){ // regular nodes and springs. Not sure this will work w. the new class. Check monday
-        node1.visited=0;
-        node1.NB0index=-1;
-        node1.NB1index=-1;
-        node1.nrNBs=0;
+        
+ 
+        X.push_back(0.0);
+        Y.push_back(0.0);
+        
+        X.push_back(1.0);
+        Y.push_back(0.0);
+        
+        X.push_back(0.5);
+        Y.push_back(0.5);
 
-        node1.nodex=0.0;
-        node1.nodey=0.0;
-        nodelist1.push_back(node1);
-        node1.nodex=1.0;
-        node1.nodey=0.0;
-        nodelist1.push_back(node1);
-        node1.nodex=0.5;
-        node1.nodey=0.5;
-        nodelist1.push_back(node1);
-        node1.nodex=0.0;
-        node1.nodey=1.0;
-        nodelist1.push_back(node1);    
-        node1.nodex=1.0;
-        node1.nodey=1.0;
-        nodelist1.push_back(node1);
+        X.push_back(0.0);
+        Y.push_back(1.0);
+
+        X.push_back(1.0);
+        Y.push_back(1.0);
 
         vector<int> spring;
         spring.push_back(0);
@@ -163,8 +159,8 @@ int main(int argc, char **argv) {
         spring[1]=4;
         springlist.push_back(spring);
     }
+
      vector<int> nopebblesprings; //This vector stores the index of springs that don't get a pebble
-    
     //make an instance of a pebble
      pebble pebbletest(X.size(),X,Y);
 
@@ -176,56 +172,25 @@ int main(int argc, char **argv) {
      }
      
     //Some post processing. Counting free pebbles etc etc
-     int freepebbles=0;
-     for(int i=0;i<pebbletest.nodelist.size();i++){
-        if(pebbletest.nodelist[i].NB0index==-1){
-           freepebbles++;
-        }
-        if(pebbletest.nodelist[i].NB1index==-1){
-            freepebbles++;
-        }
-    }
+    int freepebbles=pebbletest.freepebs();
  
      cout<<"The number of free pebbles = "<<freepebbles<<endl;
-     cout<<"Number of nodes="<<pebbletest.nodelist.size()<<endl;
+     cout<<"Number of nodes="<<pebbletest.nrnodes()<<endl;
      cout<<"Number of springs="<<springlist.size()<<endl;
-     cout<<"2*# nodes - #springs="<<2*pebbletest.nodelist.size()-springlist.size()<<endl;
-     
-     
-     //And for now an ofstream of nodes w. # pebbles and springs w. nr pebbles 
-     ofstream nodes("nodes1.txt");
-     for(int i=0; i<pebbletest.nodelist.size();i++){
-         int freepebs=0;
-         if(pebbletest.nodelist[i].NB0index==-1){
-         
-             freepebs++;
-         }
-         if(pebbletest.nodelist[i].NB1index==-1){
-             freepebs++;
-         }
-         nodes<<pebbletest.nodelist[i].nodex<<"\t"<<pebbletest.nodelist[i].nodey<<"\t"<<freepebs<<endl;;
-     }
-     
-    ofstream springs("springs1.txt");
-    int nodes1, nodes2;
-    for(int i=0;i<pebbletest.nodelist.size();i++){
-        nodes1=i;
-        if(pebbletest.nodelist[i].NB0index!=-1){
-            nodes2=pebbletest.nodelist[i].NB0index;
-            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
-        }
-        if(pebbletest.nodelist[i].NB1index!=-1){
-            nodes2=pebbletest.nodelist[i].NB1index;
-            springs<<nodes1<<"\t"<<nodes2<<"\t"<<nodes1<<endl;
-        }
-    }
-    
+     cout<<"2*# nodes - #springs="<<2*pebbletest.nrnodes()-springlist.size()<<endl;
+
+    //And for now an ofstream of nodes w. # pebbles and springs w. nr pebbles 
+    pebbletest.nodefile();
+    pebbletest.springfile();
+
+    int nodes1,nodes2;
     ofstream springs0peb("springs0peb1.txt");
     for(int i=0;i<nopebblesprings.size();i++){
         nodes1=springlist[nopebblesprings[i]][0];
         nodes2=springlist[nopebblesprings[i]][1];
         springs0peb<<nodes1<<"\t"<<nodes2<<endl;
     }
-    
+
+
     return 0;
 }
